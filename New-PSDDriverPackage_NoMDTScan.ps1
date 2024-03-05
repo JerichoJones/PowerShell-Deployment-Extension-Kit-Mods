@@ -23,8 +23,8 @@
 
           Changes by: Jericho Jones
           Version - 0.0.2 - () - Added support for creating driverpacks based on age of driver source folders
-		  Version - 0.0.3 - () - Resolved issue where all driverpack folders were being deleted regardless of DaysOld
-								 Added output to console so we can see what is happening
+	  Version - 0.0.3 - () - Resolved issue where all driverpack folders were being deleted regardless of DaysOld
+			         Added output to console so we can see what is happening
           Version - 0.0.4 - () - Added timestamps to the output to console
                                  No longer uses the MDT driver store to determine drivers per model, recreate the folder structure under RootDriverPath
                                  to match the DriverPath in your Task Sequence!
@@ -43,7 +43,11 @@
                                  )
                                  So in the usage example below your driver source folder structure should look like:
                                     E:\Drivers\Windows 10 x64\innotek GmbH\VirtualBox
+                                 and your DriverPath like:
+				    Windows 10 x64\%make%\%modelalias%
 
+                                 NOTE: I use MODELALIAS because Lenovo chooses to be "different"
+ 
                                  I gave up on the MDT DriverStore because determing the date the drivers were added was beyond my ability (or motivation).
                                  Also the way MDT manages drivers seems to be broken. When you delete them from the console, they still seem to live in the file system.
                                  Added support to create WIMs using the PS cmdlet, wimlib-imagex and DISM (pick your poison).
