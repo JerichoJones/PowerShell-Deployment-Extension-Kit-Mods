@@ -1,5 +1,6 @@
 My modifications to the PowerShell Deployment Extension Kit created by the Friends of MDT.
 
+View Raw to see the output without word wrapping.
 Sample output from New-PSDDriverPackage_NoMDTScan.ps1 -RootDriverPath E:\IMG_Drivers\ -psDeploymentFolder E:\PSDDeploymentShare\ -DaysOld 90 -CompressionType WIMLIB
 
 2024-03-04 19:37:08 Starting...
