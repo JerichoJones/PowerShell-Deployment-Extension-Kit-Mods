@@ -1,6 +1,6 @@
 ﻿<#
 .Synopsis
-    This script creates driver packages from drivers to be imported in PSD. Drivers do not need to be imported into MDT as they are crsted from the file system.
+    This script creates driver packages from drivers to be imported in PSD. Drivers do not need to be imported into MDT as they are created from the file system.
     
 .Description
     This script was written by Johan Arwidmark @jarwidmark and Mikael Nystrom @mikael_nystrom. This script is for the friends of MDT deployment tools 
