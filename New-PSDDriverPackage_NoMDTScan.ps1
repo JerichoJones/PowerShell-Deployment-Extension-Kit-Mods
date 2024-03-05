@@ -53,7 +53,7 @@
                                  Added support to create WIMs using the PS cmdlet, wimlib-imagex and DISM (pick your poison).
                                  I get the smallest WIMs using wimlib but it does take a long time (and uses ALL the cores) the way it is currently configured.
                                  No longer copies drivers to $psDeploymentFolder\PSDResources\DriverSources, archives them directly from RootDriverPath
-                                 No longer creates archive and then moves it into position. It archives directly to the destination. If it fails I prefer to figure out why early on.
+                                 No longer creates archive and then moves it into position. It archives directly to the destination. It was a design choice.
 
 .EXAMPLE
 	.\New-PSDDriverPackage.ps1 -RootDriverPath E:\Drivers -psDeploymentFolder E:\PSDProduction -CompressionType WIMPS -DaysOld 1
