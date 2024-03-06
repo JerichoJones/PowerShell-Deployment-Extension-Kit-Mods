@@ -1,4 +1,4 @@
-﻿<#
+<#
 .Synopsis
     This script creates driver packages from drivers to be imported in PSD. Drivers do not need to be imported into MDT as they are created from the file system.
     
@@ -23,10 +23,10 @@
 
           Changes by: Jericho Jones
           Version - 0.0.2 - () - Added support for creating driverpacks based on age of driver source folders. I use the CREATION date.
-	                         If you add drivers to an existing folder it will most likely NOT BE DETECTED.
-			         Create a New folder and copy everything into that.
-	  Version - 0.0.3 - () - Resolved issue where all driverpack folders were being deleted regardless of DaysOld
-			         Added output to console so we can see what is happening
+                                 If you add drivers to an existing folder it will most likely NOT BE DETECTED.
+                                 Create a New folder and copy everything into that.
+		  Version - 0.0.3 - () - Resolved issue where all driverpack folders were being deleted regardless of DaysOld
+								 Added output to console so we can see what is happening
           Version - 0.0.4 - () - Added timestamps to the output to console
                                  No longer uses the MDT driver store to determine drivers per model, recreate the folder structure under RootDriverPath
                                  to match the DriverPath in your Task Sequence!
@@ -43,19 +43,25 @@
                                     "Windows 10 x64\VMware, Inc\VMware20,1",
                                     "Windows 10 x64\VMware, Inc\VMware7,1"
                                  )
+
+                                 Since the Windows filesystem does not support trailing periods for our DriverSource we have to add a period after VMware, Inc to match the BIOS Model/ModelAlias
+                                 when we create the driverpacks.
+
                                  So in the usage example below your driver source folder structure should look like:
-                                    E:\Drivers\Windows 10 x64\innotek GmbH\VirtualBox
-                                 and your DriverPath like:
-				    Windows 10 x64\%make%\%modelalias%
+                                    E:\Drivers\Windows 10 x64\VMware, Inc\VMware20,1
+
+                                 and the DriverPath in your Task Sequence like:
+	                 			    Windows 10 x64\%make%\%modelalias%
 
                                  NOTE: I use MODELALIAS because Lenovo chooses to be "different"
  
-                                 I gave up on the MDT DriverStore because determing the date the drivers were added was beyond my ability (or motivation).
+                                 I gave up on the MDT DriverStore because determining the date the drivers were added was beyond my ability (or motivation).
                                  Also the way MDT manages drivers seems to be broken. When you delete them from the console, they still seem to live in the file system.
                                  Added support to create WIMs using the PS cmdlet, wimlib-imagex and DISM (pick your poison).
                                  I get the smallest WIMs using wimlib but it does take a long time (and uses ALL the cores) the way it is currently configured.
                                  No longer copies drivers to $psDeploymentFolder\PSDResources\DriverSources, archives them directly from RootDriverPath
                                  No longer creates archive and then moves it into position. It archives directly to the destination. It was a design choice.
+          Version - 0.0.5 - () - Now outputs size of created archive
 
 .EXAMPLE
 	.\New-PSDDriverPackage.ps1 -RootDriverPath E:\Drivers -psDeploymentFolder E:\PSDProduction -CompressionType WIMPS -DaysOld 1
@@ -288,6 +294,15 @@ $foldersToProcess = $false
 $ProcessedFolderNames = @{}
 foreach($SourceFolderName in $SourceFolderNames){
 
+    # The Windows filesystem does not support trailing periods
+    # We have to add a period after VMware, Inc
+    # Perform a case-insensitive replace
+    # The regex (?i) makes the match case-insensitive
+    # The \b ensures we're at a word boundary, so we don't add a period in the middle of a word
+    if ($SourceFolderName -match "(?i)\\VMware, Inc\\") {
+        $SourceFolderName = $SourceFolderName -replace '(?i)(\\VMware, Inc)(\\)', '${1}.${2}'
+    }
+
     $SourceFolderPath = "$RootDriverPath\$SourceFolderName"
 
     # Check the creation date of the source folder
@@ -377,7 +392,12 @@ foreach($SourceFolderName in $SourceFolderNames){
                 Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Creating WIM format archive at $DestFile using PS cmdlet"
                 New-WindowsImage -CapturePath $SourceFolderPath -ImagePath $DestFile -Name "Driver Package" | Out-Null
                 Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Successfully created $DestFile using PS cmdlet"
+                # Retrieve and format the file size
+                $fileInfo = Get-Item $DestFile
+                $fileSizeMB = "{0:N2} MB" -f ($fileInfo.Length / 1MB)
                 Write-PSDInstallLog -Message "Successfully created $DestFile using wimlib-imagex"
+                Write-PSDInstallLog -Message "Archive File Size: $fileSizeMB`MB"
+                Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Archive File Size: $fileSizeMB`MB"
             } catch {
                 Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Failed to create $DestFile using PS cmdlet. Error: $_"
                 Write-PSDInstallLog -Message "Failed to create $DestFile using PS cmdlet. Error: $_" -LogLevel 3
@@ -400,7 +420,12 @@ foreach($SourceFolderName in $SourceFolderNames){
                 }
                 Write-Output "`n"
                 Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Successfully created $DestFile using wimlib-imagex"
+                # Retrieve and format the file size
+                $fileInfo = Get-Item $DestFile
+                $fileSizeMB = "{0:N2} MB" -f ($fileInfo.Length / 1MB)
                 Write-PSDInstallLog -Message "Successfully created $DestFile using wimlib-imagex"
+                Write-PSDInstallLog -Message "Archive File Size: $fileSizeMB`MB"
+                Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Archive File Size: $fileSizeMB`MB"
             } catch {
                 Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Failed to create $DestFile using wimlib-imagex. Error: $_"
                 Write-PSDInstallLog -Message "Failed to create $DestFile using wimlib-imagex. Error: $_" -LogLevel 3
@@ -422,7 +447,12 @@ foreach($SourceFolderName in $SourceFolderNames){
                 }
 
                 Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Successfully created $DestFile using DISM"
+                # Retrieve and format the file size
+                $fileInfo = Get-Item $DestFile
+                $fileSizeMB = "{0:N2} MB" -f ($fileInfo.Length / 1MB)
                 Write-PSDInstallLog -Message "Successfully created $DestFile using DISM"
+                Write-PSDInstallLog -Message "Archive File Size: $fileSizeMB`MB"
+                Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Archive File Size: $fileSizeMB`MB"
             } catch {
                 Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Failed to create $DestFile using DISM. Error: $_"
                 Write-PSDInstallLog -Message "Failed to create $DestFile using DISM. Error: $_" -LogLevel 3
@@ -439,7 +469,12 @@ foreach($SourceFolderName in $SourceFolderNames){
                     [IO.Compression.ZIPFile]::CreateFromDirectory("$SourceFolderPath", $DestFile)
                 }
                 Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Successfully created $DestFile"
+                # Retrieve and format the file size
+                $fileInfo = Get-Item $DestFile
+                $fileSizeMB = "{0:N2} MB" -f ($fileInfo.Length / 1MB)
                 Write-PSDInstallLog -Message "Successfully created $DestFile"
+                Write-PSDInstallLog -Message "Archive File Size: $fileSizeMB`MB"
+                Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Archive File Size: $fileSizeMB`MB"
             } catch {
                 Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Failed to create $DestFile error $_`... Exiting"
                 Write-PSDInstallLog -Message "Failed to create $DestFile error $_`... Exiting" -LogLevel 3
