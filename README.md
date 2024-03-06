@@ -2,8 +2,6 @@
 
 Changes are listed in the header of each script
 
-View Raw to see the output without word wrapping.
-
 Sample output from:
 New-PSDDriverPackage_NoMDTScan.ps1 -RootDriverPath E:\IMG_Drivers\ -psDeploymentFolder E:\PSDDeploymentShare\ -DaysOld 7 -CompressionType WIMLIB
 
