@@ -396,8 +396,8 @@ foreach($SourceFolderName in $SourceFolderNames){
                 $fileInfo = Get-Item $DestFile
                 $fileSizeMB = "{0:N2} MB" -f ($fileInfo.Length / 1MB)
                 Write-PSDInstallLog -Message "Successfully created $DestFile using wimlib-imagex"
-                Write-PSDInstallLog -Message "Archive File Size: $fileSizeMB`MB"
-                Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Archive File Size: $fileSizeMB`MB"
+                Write-PSDInstallLog -Message "Archive File Size: $fileSizeMB"
+                Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Archive File Size: $fileSizeMB"
             } catch {
                 Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Failed to create $DestFile using PS cmdlet. Error: $_"
                 Write-PSDInstallLog -Message "Failed to create $DestFile using PS cmdlet. Error: $_" -LogLevel 3
@@ -424,8 +424,8 @@ foreach($SourceFolderName in $SourceFolderNames){
                 $fileInfo = Get-Item $DestFile
                 $fileSizeMB = "{0:N2} MB" -f ($fileInfo.Length / 1MB)
                 Write-PSDInstallLog -Message "Successfully created $DestFile using wimlib-imagex"
-                Write-PSDInstallLog -Message "Archive File Size: $fileSizeMB`MB"
-                Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Archive File Size: $fileSizeMB`MB"
+                Write-PSDInstallLog -Message "Archive File Size: $fileSizeMB"
+                Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Archive File Size: $fileSizeMB"
             } catch {
                 Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Failed to create $DestFile using wimlib-imagex. Error: $_"
                 Write-PSDInstallLog -Message "Failed to create $DestFile using wimlib-imagex. Error: $_" -LogLevel 3
@@ -451,8 +451,8 @@ foreach($SourceFolderName in $SourceFolderNames){
                 $fileInfo = Get-Item $DestFile
                 $fileSizeMB = "{0:N2} MB" -f ($fileInfo.Length / 1MB)
                 Write-PSDInstallLog -Message "Successfully created $DestFile using DISM"
-                Write-PSDInstallLog -Message "Archive File Size: $fileSizeMB`MB"
-                Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Archive File Size: $fileSizeMB`MB"
+                Write-PSDInstallLog -Message "Archive File Size: $fileSizeMB"
+                Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Archive File Size: $fileSizeMB"
             } catch {
                 Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Failed to create $DestFile using DISM. Error: $_"
                 Write-PSDInstallLog -Message "Failed to create $DestFile using DISM. Error: $_" -LogLevel 3
@@ -473,8 +473,8 @@ foreach($SourceFolderName in $SourceFolderNames){
                 $fileInfo = Get-Item $DestFile
                 $fileSizeMB = "{0:N2} MB" -f ($fileInfo.Length / 1MB)
                 Write-PSDInstallLog -Message "Successfully created $DestFile"
-                Write-PSDInstallLog -Message "Archive File Size: $fileSizeMB`MB"
-                Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Archive File Size: $fileSizeMB`MB"
+                Write-PSDInstallLog -Message "Archive File Size: $fileSizeMB"
+                Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Archive File Size: $fileSizeMB"
             } catch {
                 Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Failed to create $DestFile error $_`... Exiting"
                 Write-PSDInstallLog -Message "Failed to create $DestFile error $_`... Exiting" -LogLevel 3
@@ -498,7 +498,9 @@ $elapsed = $stopwatch.Elapsed
 
 # Format and display the elapsed time as hours:minutes:seconds
 $elapsedTimeFormatted = $elapsed.ToString("hh\h\:mm\m\:ss\s")
+Write-Output "------------------------------------------------------------"
 Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Total execution time: $elapsedTimeFormatted"
 Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Process Complete"
 Write-PSDInstallLog -Message "Total execution time: $elapsedTimeFormatted"
 Write-PSDInstallLog -Message "Process Complete"
+Write-Output "------------------------------------------------------------"
