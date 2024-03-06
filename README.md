@@ -1,4 +1,5 @@
 My modifications to the PowerShell Deployment Extension Kit created by the Friends of MDT.
+Changes are listed in the header of each script
 
 View Raw to see the output without word wrapping.
 
@@ -86,12 +87,12 @@ Archiving file data: 2452 MiB of 2452 MiB (100%) done
 
 2024-03-04 22:04:25 --- Verifying the creation date of the source folder 'E:\IMG_Drivers\Windows 10 x64\VMware, Inc\VMware20,1' ---
 2024-03-04 22:04:25 The creation date of the source folder 'E:\IMG_Drivers\Windows 10 x64\VMware, Inc\VMware20,1' is 02/22/2024 11:14:40
-2024-03-04 22:04:25 Skipping folder 'E:\IMG_Drivers\Windows 10 x64\VMware, Inc\VMware20,1' as it is older than 7 days.
+2024-03-04 22:04:25 Skipping folder 'E:\IMG_Drivers\Windows 10 x64\VMware, Inc.\VMware20,1' as it is older than 7 days.
 
 
 2024-03-04 22:04:25 --- Verifying the creation date of the source folder 'E:\IMG_Drivers\Windows 10 x64\VMware, Inc\VMware7,1' ---
 2024-03-04 22:04:25 The creation date of the source folder 'E:\IMG_Drivers\Windows 10 x64\VMware, Inc\VMware7,1' is 02/22/2024 11:14:14
-2024-03-04 22:04:25 Skipping folder 'E:\IMG_Drivers\Windows 10 x64\VMware, Inc\VMware7,1' as it is older than 7 days.
+2024-03-04 22:04:25 Skipping folder 'E:\IMG_Drivers\Windows 10 x64\VMware, Inc.\VMware7,1' as it is older than 7 days.
 
 
 2024-03-04 22:04:25 Total execution time: 00h:24m:09s
