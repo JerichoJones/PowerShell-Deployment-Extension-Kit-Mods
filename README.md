@@ -1,4 +1,4 @@
-My modifications to the PowerShell Deployment Extension Kit created by the Friends of MDT.
+My modifications to the PowerShell Deployment Extension Kit v2.2.8 created by the [Friends of MDT](https://github.com/FriendsOfMDT).
 Changes are listed in the header of each script
 
 View Raw to see the output without word wrapping.
