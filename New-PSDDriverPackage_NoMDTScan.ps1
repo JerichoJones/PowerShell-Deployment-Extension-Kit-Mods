@@ -28,18 +28,18 @@
 		  Version - 0.0.3 - () - Resolved issue where all driverpack folders were being deleted regardless of DaysOld
 								 Added output to console so we can see what is happening
           Version - 0.0.4 - () - Added timestamps to the output to console
-                                 No longer uses the MDT driver store to determine drivers per model, recreate the folder structure under RootDriverPath
-                                 to match the DriverPath in your Task Sequence!
+                                 No longer uses the MDT driver store to determine drivers per model, recreate the folder structure under
+								 RootDriverPath to match the DriverPath in your Task Sequence!
                                  You must define the $SourceFolderNames with the driver folder structure:
                                  EXAMPLE:
                                  $SourceFolderNames = @("Windows 10 x64\WinPE X64",
                                     "Windows 10 x64\innotek GmbH\VirtualBox",
-                                    "Windows 10 x64\Lenovo\ThinkCentre M90q",
-                                    "Windows 10 x64\Lenovo\ThinkPad T14 Gen 4",
-                                    "Windows 10 x64\Lenovo\ThinkPad T16 Gen 2",
-                                    "Windows 10 x64\Lenovo\Thinkpad Z16 Gen 2",
-                                    "Windows 10 x64\Lenovo\ThinkStation P3 Ultra",
-                                    "Windows 10 x64\Lenovo\ThinkStation P5",
+                                    "Windows 10 x64\LENOVO\ThinkCentre M90q",
+                                    "Windows 10 x64\LENOVO\ThinkPad T14 Gen 4",
+                                    "Windows 10 x64\LENOVO\ThinkPad T16 Gen 2",
+                                    "Windows 10 x64\LENOVO\Thinkpad Z16 Gen 2",
+                                    "Windows 10 x64\LENOVO\ThinkStation P3 Ultra",
+                                    "Windows 10 x64\LENOVO\ThinkStation P5",
                                     "Windows 10 x64\VMware, Inc\VMware20,1",
                                     "Windows 10 x64\VMware, Inc\VMware7,1"
                                  )
@@ -62,6 +62,13 @@
                                  No longer copies drivers to $psDeploymentFolder\PSDResources\DriverSources, archives them directly from RootDriverPath
                                  No longer creates archive and then moves it into position. It archives directly to the destination. It was a design choice.
           Version - 0.0.5 - () - Now outputs size of created archive
+          Version - 0.0.6 - () - Moved the DriverPack paths into a text file so we don't have to edit the script to add new models.
+                                 Add the $SourceFolderNames to the DriverPackModelsPaths.txt, one path per line next to the script.
+                                 Example:
+                                            Windows 10 x64\WinPE X64
+                                            Windows 10 x64\innotek GmbH\VirtualBox
+                                            Windows 10 x64\LENOVO\ThinkCentre M90q
+                                            Windows 10 x64\VMware Inc\VMware7,1
 
 .EXAMPLE
 	.\New-PSDDriverPackage.ps1 -RootDriverPath E:\Drivers -psDeploymentFolder E:\PSDProduction -CompressionType WIMPS -DaysOld 1
@@ -82,18 +89,6 @@ Param(
     [string]$CompressionType = "WIMPS", # Default to PS WIM cmdlet if not specified
 
     [int]$DaysOld = 30  # Default to 30 days if not specified
-)
-
-$SourceFolderNames = @("Windows 10 x64\WinPE X64",
-						"Windows 10 x64\innotek GmbH\VirtualBox",
-						"Windows 10 x64\Lenovo\ThinkCentre M90q",
-						"Windows 10 x64\Lenovo\ThinkPad T14 Gen 4",
-						"Windows 10 x64\Lenovo\ThinkPad T16 Gen 2",
-						"Windows 10 x64\Lenovo\Thinkpad Z16 Gen 2",
-						"Windows 10 x64\Lenovo\ThinkStation P3 Ultra",
-						"Windows 10 x64\Lenovo\ThinkStation P5",
-						"Windows 10 x64\VMware, Inc\VMware20,1",
-						"Windows 10 x64\VMware, Inc\VMware7,1"
 )
 
 $RootDriverPath = $RootDriverPath.TrimEnd("\")
@@ -218,6 +213,18 @@ set-PSDDefaultLogPath
 # Get the directory of the current script
 $scriptPath = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
 
+if($psDeploymentFolder -eq "NA"){
+	Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") You need to specify a psDeploymentFolder"
+    Write-PSDInstallLog -Message "You need to specify a psDeploymentFolder" -LogLevel 2
+    $Fail = $True
+}
+
+if((Test-Path -Path $psDeploymentFolder ) -eq $false){
+	Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Unable to access $psDeploymentFolder, exiting"
+    Write-PSDInstallLog -Message "Unable to access $psDeploymentFolder, exiting" -LogLevel 2
+    $Fail = $True
+}
+
 # Paths to wimlib-imagex.exe and libwim-15.dll based on the current script's directory
 $wimlibPath = Join-Path -Path $scriptPath -ChildPath "wimlib-imagex.exe"
 $libwimPath = Join-Path -Path $scriptPath -ChildPath "libwim-15.dll"
@@ -248,21 +255,23 @@ If ($CompressionType -eq "WIMLIB"){
     }
 }
 
-if($psDeploymentFolder -eq "NA"){
-	Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") You need to specify a psDeploymentFolder"
-    Write-PSDInstallLog -Message "You need to specify a psDeploymentFolder" -LogLevel 2
-    $Fail = $True
+# Opening $scriptPath\DriverPackModelsPaths.txt for parsing.
+Try {
+    Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Opening $scriptPath\DriverPackModelsPaths.txt for parsing."
+    Write-PSDInstallLog -Message "Opening $scriptPath\DriverPackModelsPaths.txt for parsing."
+    $SourceFolderNames = Get-Content "$scriptPath\DriverPackModelsPaths.txt" -ErrorAction Stop
+    Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") DriverPack List loaded successfully"
+    Write-PSDInstallLog -Message "DriverPack List loaded successfully"
 }
-
-if((Test-Path -Path $psDeploymentFolder ) -eq $false){
-	Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Unable to access $psDeploymentFolder, exiting"
-    Write-PSDInstallLog -Message "Unable to access $psDeploymentFolder, exiting" -LogLevel 2
+catch {
+    Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Failed to load DriverPack List."
+    Write-PSDInstallLog -Message "Failed to load DriverPack List."
     $Fail = $True
 }
 
 if($Fail -eq $True){
 	Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Exiting"
-    Write-PSDInstallLog -Message "Exiting" -LogLevel 2
+    Write-PSDInstallLog -Message "Exiting"
     Exit
 }
 
