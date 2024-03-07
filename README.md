@@ -12,6 +12,8 @@ New-PSDDriverPackage_NoMDTScan.ps1 -RootDriverPath E:\IMG_Drivers\ -psDeployment
     2024-03-06 15:20:55 Starting...
     2024-03-06 15:20:55 Start logging
     2024-03-06 15:20:55 Both wimlib-imagex.exe and libwim-15.dll are in the same folder as the executing script.
+    2024-03-06 15:20:55 Opening E:\PSDDeploymentShare\Tools\DriverPackModels.txt for parsing.
+    2024-03-06 15:20:55 DriverPack List loaded successfully
     2024-03-06 15:20:55 Driver location is: E:\IMG_Drivers
     2024-03-06 15:20:55 Get a list of drivers added within the last 2 days and copy to source folder
     
