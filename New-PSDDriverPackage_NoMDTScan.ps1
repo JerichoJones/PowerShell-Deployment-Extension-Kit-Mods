@@ -58,6 +58,7 @@
                                  I gave up on the MDT DriverStore because determining the date the drivers were added was beyond my ability (or motivation).
                                  Also the way MDT manages drivers seems to be broken. When you delete them from the console, they still seem to live in the file system.
                                  Added support to create WIMs using the PS cmdlet, wimlib-imagex and DISM (pick your poison).
+                                 wimlib-imagex.exe and libwim-15.dll must be either in the folder next to the script or in the PATH
                                  I get the smallest WIMs using wimlib but it does take a long time (and uses ALL the cores) the way it is currently configured.
                                  No longer copies drivers to $psDeploymentFolder\PSDResources\DriverSources, archives them directly from RootDriverPath
                                  No longer creates archive and then moves it into position. It archives directly to the destination. It was a design choice.
