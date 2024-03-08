@@ -65,11 +65,13 @@
           Version - 0.0.5 - () - Now outputs size of created archive
           Version - 0.0.6 - () - Moved the DriverPack paths into a text file so we don't have to edit the script to add new models.
                                  Add the $SourceFolderNames to the DriverPackModelsPaths.txt, one path per line next to the script.
+                                 Please avoid blank lines.
                                  Example:
                                             Windows 10 x64\WinPE X64
                                             Windows 10 x64\innotek GmbH\VirtualBox
                                             Windows 10 x64\LENOVO\ThinkCentre M90q
                                             Windows 10 x64\VMware Inc\VMware7,1
+          Version - 0.0.7 - () - Skip blank lines in DriverPackModelsPaths.txt or we will enter a recursive loop
 
 .EXAMPLE
 	.\New-PSDDriverPackage.ps1 -RootDriverPath E:\Drivers -psDeploymentFolder E:\PSDProduction -CompressionType WIMPS -DaysOld 1
@@ -303,6 +305,12 @@ $foldersToProcess = $false
 
 $ProcessedFolderNames = @{}
 foreach($SourceFolderName in $SourceFolderNames){
+    # Skip blank lines in DriverPackModelsPaths.txt or we will enter a recursive loop
+    if ([string]::IsNullOrEmpty($SourceFolderName)) {
+        Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") *** Blank Line in DriverPackModelsPaths.txt... Skipping ***"
+        Write-PSDInstallLog -Message "*** Blank Line in DriverPackModelsPaths.txt ***... Skipping" -LogLevel 1
+        continue
+    }
 
     # The Windows filesystem does not support trailing periods
     # We have to add a period after VMware, Inc
