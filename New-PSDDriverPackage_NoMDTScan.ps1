@@ -72,6 +72,7 @@
                                             Windows 10 x64\LENOVO\ThinkCentre M90q
                                             Windows 10 x64\VMware Inc\VMware7,1
           Version - 0.0.7 - () - Skip blank lines in DriverPackModelsPaths.txt or we could enter a recursive loop
+                                 Modified set-PSDDefaultLogPath to prepend the logname with a timestamp
 
 .EXAMPLE
 	.\New-PSDDriverPackage.ps1 -RootDriverPath E:\Drivers -psDeploymentFolder E:\PSDProduction -CompressionType WIMPS -DaysOld 1
@@ -178,13 +179,13 @@ function set-PSDDefaultLogPath{
 	if($defaultLogLocation)
 	{
 		$LogPath = Split-Path $script:MyInvocation.MyCommand.Path
-		$LogFile = "$($($script:MyInvocation.MyCommand.Name).Substring(0,$($script:MyInvocation.MyCommand.Name).Length-4)).log"		
+		$LogFile = "$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")_$($($script:MyInvocation.MyCommand.Name).Substring(0,$($script:MyInvocation.MyCommand.Name).Length-4)).log"
 		Start-PSDLog -FilePath $($LogPath + "\" + $LogFile)
 	}
 	else 
 	{
 		$LogPath = $LogLocation
-		$LogFile = "$($($script:MyInvocation.MyCommand.Name).Substring(0,$($script:MyInvocation.MyCommand.Name).Length-4)).log"		
+		$LogFile = "$(Get-Date -Format "yyyy-MM-dd_HH-mm-ss")_$($($script:MyInvocation.MyCommand.Name).Substring(0,$($script:MyInvocation.MyCommand.Name).Length-4)).log"
 		Start-PSDLog -FilePath $($LogPath + "\" + $LogFile)
 	}
 }
@@ -209,12 +210,15 @@ $stopwatch = [System.Diagnostics.Stopwatch]::StartNew()
 # Set VerboseForegroundColor
 $host.PrivateData.VerboseForegroundColor = 'Cyan'
 
+# Get the directory of the current script
+$scriptPath = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
+
+# Get the filename of the current script
+$scriptName = $MyInvocation.MyCommand.Name
+
 # Start logging
 Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Start logging"
 set-PSDDefaultLogPath
-
-# Get the directory of the current script
-$scriptPath = Split-Path -Path $MyInvocation.MyCommand.Definition -Parent
 
 if($psDeploymentFolder -eq "NA"){
 	Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") You need to specify a psDeploymentFolder"
@@ -294,7 +298,6 @@ If(!(Test-Path $DriverPackagesFolder))
 	}
 }
 
-#$RootDriverPath = "E:\IMG_Drivers"
 Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Driver location is: $RootDriverPath"
 Write-PSDInstallLog -Message "Driver location is: $RootDriverPath"
 
