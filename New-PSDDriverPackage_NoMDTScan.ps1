@@ -71,7 +71,7 @@
                                             Windows 10 x64\innotek GmbH\VirtualBox
                                             Windows 10 x64\LENOVO\ThinkCentre M90q
                                             Windows 10 x64\VMware Inc\VMware7,1
-          Version - 0.0.7 - () - Skip blank lines in DriverPackModelsPaths.txt or we will enter a recursive loop
+          Version - 0.0.7 - () - Skip blank lines in DriverPackModelsPaths.txt or we could enter a recursive loop
 
 .EXAMPLE
 	.\New-PSDDriverPackage.ps1 -RootDriverPath E:\Drivers -psDeploymentFolder E:\PSDProduction -CompressionType WIMPS -DaysOld 1
