@@ -25,11 +25,11 @@
           Version - 0.0.2 - () - Added support for creating driverpacks based on age of driver source folders. I use the CREATION date.
                                  If you add drivers to an existing folder it will most likely NOT BE DETECTED.
                                  Create a New folder and copy everything into that.
-		  Version - 0.0.3 - () - Resolved issue where all driverpack folders were being deleted regardless of DaysOld
-								 Added output to console so we can see what is happening
+	  Version - 0.0.3 - () - Resolved issue where all driverpack folders were being deleted regardless of DaysOld
+				 Added output to console so we can see what is happening
           Version - 0.0.4 - () - Added timestamps to the output to console
                                  No longer uses the MDT driver store to determine drivers per model, recreate the folder structure under
-								 RootDriverPath to match the DriverPath in your Task Sequence!
+				 RootDriverPath to match the DriverPath in your Task Sequence!
                                  You must define the $SourceFolderNames with the driver folder structure:
                                  EXAMPLE:
                                  $SourceFolderNames = @("Windows 10 x64\WinPE X64",
@@ -59,7 +59,7 @@
                                  Also the way MDT manages drivers seems to be broken. When you delete them from the console, they still seem to live in the file system.
                                  Added support to create WIMs using the PS cmdlet, wimlib-imagex and DISM (pick your poison).
                                  wimlib-imagex.exe and libwim-15.dll must be either in the folder next to the script or in the PATH
-                                 I get the smallest WIMs using wimlib but it does take a long time (and uses ALL the cores) the way it is currently configured.
+                                 I get the smallest WIMs using wimlib but it does take a long time (and uses ALL the cores) the way it is currently configured. Fixed in v0.0.8 - uses half the cores
                                  No longer copies drivers to $psDeploymentFolder\PSDResources\DriverSources, archives them directly from RootDriverPath
                                  No longer creates archive and then moves it into position. It archives directly to the destination. It was a design choice.
           Version - 0.0.5 - () - Now outputs size of created archive
@@ -73,6 +73,7 @@
                                             Windows 10 x64\VMware Inc\VMware7,1
           Version - 0.0.7 - () - Skip blank lines in DriverPackModelsPaths.txt or we could enter a recursive loop
                                  Modified set-PSDDefaultLogPath to prepend the logname with a timestamp
+          Version - 0.0.8 - () - Determine number of available CPU cores and use half for wimlib-imagex
 
 .EXAMPLE
 	.\New-PSDDriverPackage.ps1 -RootDriverPath E:\Drivers -psDeploymentFolder E:\PSDProduction -CompressionType WIMPS -DaysOld 1
@@ -201,6 +202,24 @@ function Copy-PSDFolder{
     $d = $destination.TrimEnd("\")
     Write-Verbose "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Copying folder $source to $destination using XCopy"
     & xcopy $s $d /s /e /v /y /i | Out-Null
+}
+
+function Get-AdjustedCores {
+    # Aggregate the total number of cores across all processors
+    $totalCores = (Get-WmiObject -Class Win32_Processor | Measure-Object -Property NumberOfCores -Sum).Sum
+    
+    # Divide the total number of cores by 2
+    $halfCores = $totalCores / 2
+    
+    # If the original number of cores is odd, use Ceiling to round up
+    if ($totalCores % 2 -ne 0) {
+        $adjustedCores = [math]::Ceiling($halfCores)
+    } else {
+        $adjustedCores = $halfCores
+    }
+    
+    # Return the adjusted number of cores
+    return $adjustedCores
 }
 
 Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Starting..."
@@ -426,9 +445,13 @@ foreach($SourceFolderName in $SourceFolderNames){
         }
         ElseIf ($CompressionType -eq "WIMLIB"){
             try {
+                # Determine number of available CPU cores and use half for wimlib-imagex
+                $cores = Get-AdjustedCores
+
+                Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Using $cores CPU cores for WIM compression"
+                Write-PSDInstallLog -Message "Using $cores CPU cores for WIM compression"
                 # Create WIM format archive using wimlib-imagex
-                # $wimlibPath = $wimlibExePath # This is set at the beginning of the script
-                $wimlibArguments = "capture `"$SourceFolderPath`" `"$DestFile`" --solid --solid-compress=LZMS:100 --no-acls `"Driver Package`" `"$DestinationFolderName`""
+                $wimlibArguments = "capture `"$SourceFolderPath`" `"$DestFile`" --solid --solid-compress=LZMS:100 --no-acls --threads=$cores `"Driver Package`" `"$DestinationFolderName`""
 
                 Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") Creating WIM format archive at $DestFile using wimlib-imagex"
                 Write-Output "`n"
