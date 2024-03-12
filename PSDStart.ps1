@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
     Start or continue a PSD task sequence. 
 .DESCRIPTION
@@ -35,6 +35,7 @@
           Changes by: Jericho Jones
           version - 0.1.1 - Added connection to server verification (probably redundant)
                             Will wait up to 5 minutes for a connection. It can exit on failure but that is currently remarked out
+          version - 0.1.2 - Remarked out the code to verify/wait for a connection to the server.
 
 
           TODO:
@@ -247,7 +248,7 @@ Get-Volume | ? {-not [String]::IsNullOrWhiteSpace($_.DriveLetter) } | ? {$_.Driv
     }
     Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): Restored variables from $variablesPath."
 
-	# Verify connection to server
+	<# Verify connection to server
 	Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): Testing connection to server"
     #Show-PSDInfo -Message "Testing connection to server" -OSDComputername $OSDComputername -Deployroot $global:psddsDeployRoot
 	
@@ -289,7 +290,7 @@ Get-Volume | ? {-not [String]::IsNullOrWhiteSpace($_.DriveLetter) } | ? {$_.Driv
         # Unremark next line to exit on failure
         #Write-PSDLog -Message "Failed to connect to $server within the 5-minute timeout." -LogLevel 3
 	}
-
+#>
     # Reconnect to the deployment share
     Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): Reconnecting to the deployment share at $($tsenv:DeployRoot)."
     if ($tsenv:UserDomain -ne ""){
