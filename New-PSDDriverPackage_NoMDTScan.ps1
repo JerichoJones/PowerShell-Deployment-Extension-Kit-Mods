@@ -25,11 +25,11 @@
           Version - 0.0.2 - () - Added support for creating driverpacks based on age of driver source folders. I use the CREATION date.
                                  If you add drivers to an existing folder it will most likely NOT BE DETECTED.
                                  Create a New folder and copy everything into that.
-	  Version - 0.0.3 - () - Resolved issue where all driverpack folders were being deleted regardless of DaysOld
-				 Added output to console so we can see what is happening
+		  Version - 0.0.3 - () - Resolved issue where all driverpack folders were being deleted regardless of DaysOld
+								 Added output to console so we can see what is happening
           Version - 0.0.4 - () - Added timestamps to the output to console
                                  No longer uses the MDT driver store to determine drivers per model, recreate the folder structure under
-				 RootDriverPath to match the DriverPath in your Task Sequence!
+								 RootDriverPath to match the DriverPath in your Task Sequence!
                                  You must define the $SourceFolderNames with the driver folder structure:
                                  EXAMPLE:
                                  $SourceFolderNames = @("Windows 10 x64\WinPE X64",
@@ -51,7 +51,7 @@
                                     E:\Drivers\Windows 10 x64\VMware, Inc\VMware20,1
 
                                  and the DriverPath in your Task Sequence like:
-	      			    Windows 10 x64\%make%\%modelalias%
+	                 			    Windows 10 x64\%make%\%modelalias%
 
                                  NOTE: I use MODELALIAS because Lenovo chooses to be "different"
  
@@ -74,6 +74,7 @@
           Version - 0.0.7 - () - Skip blank lines in DriverPackModelsPaths.txt or we could enter a recursive loop
                                  Modified Set-PSDDefaultLogPath to prepend the logname with a timestamp
           Version - 0.0.8 - () - Determine number of available CPU cores and use half for wimlib-imagex
+          Version - 0.0.9 - () - Shows a proper message and logs if a driver folder is not found
 
 .EXAMPLE
 	.\New-PSDDriverPackage.ps1 -RootDriverPath E:\Drivers -psDeploymentFolder E:\PSDProduction -CompressionType WIMPS -DaysOld 1
@@ -347,8 +348,16 @@ foreach($SourceFolderName in $SourceFolderNames){
 
     # Check the creation date of the source folder
     Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") --- Verifying the creation date of the source folder `'$SourceFolderPath`' ---"
-    Write-PSDInstallLog -Message "Checking the creation date of the source folder `'$SourceFolderPath`'" -LogLevel 1
-    $CreationDate = (Get-Item $SourceFolderPath).CreationTime
+    Write-PSDInstallLog -Message "Verifying the creation date of the source folder `'$SourceFolderPath`'" -LogLevel 1
+    If(Test-Path $SourceFolderPath){
+        $CreationDate = (Get-Item $SourceFolderPath).CreationTime
+    }
+    else{
+        Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") --- `'$SourceFolderPath`' not found... continuing ---"
+        Write-Output "`n"
+        Write-PSDInstallLog -Message "`'$SourceFolderPath`' not found... continuing ---" -LogLevel 1
+        continue
+    }
     Write-Output "$(Get-Date -Format "yyyy-MM-dd HH:mm:ss") The creation date of the source folder `'$SourceFolderPath`' is $CreationDate"
     Write-PSDInstallLog -Message "The creation date of the source folder `'$SourceFolderPath`' is $CreationDate" -LogLevel 1
     $DateLimit = (Get-Date).AddDays(-$DaysOld)
