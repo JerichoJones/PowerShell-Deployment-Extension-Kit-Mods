@@ -9,7 +9,7 @@ These scripts are mean't to be used as a group. Mixing and matching is on you.
 View Raw to see the output without word wrapping.
 
 Sample output from:
-New-PSDDriverPackage_NoMDTScan_OOBD.ps1 -RootDriverPath E:\IMG_Drivers\ -psDeploymentFolder E:\PSDDeploymentShare\ -CompressionType WIMLIB -DaysOld 1
+New-PSDDriverPackage_NoMDTScan.ps1 -RootDriverPath E:\IMG_Drivers\ -psDeploymentFolder E:\PSDDeploymentShare\ -CompressionType WIMLIB -DaysOld 1
 
     2024-03-26 10:16:17 Starting...
     2024-03-26 10:16:17 Start logging
