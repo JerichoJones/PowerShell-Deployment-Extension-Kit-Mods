@@ -25,7 +25,7 @@
           Version - 0.0.2 - () - Added support for creating driverpacks based on age of driver source folders. I use the CREATION date.
                                  If you add drivers to an existing folder it will most likely NOT BE DETECTED.
                                  Create a New folder and copy everything into that.
-		  Version - 0.0.3 - () - Resolved issue where all driverpack folders were being deleted regardless of DaysOld
+	  Version - 0.0.3 - () - Resolved issue where all driverpack folders were being deleted regardless of DaysOld
 								 Added output to console so we can see what is happening
           Version - 0.0.4 - () - Added timestamps to the output to console
                                  No longer uses the MDT driver store to determine drivers per model, recreate the folder structure under
