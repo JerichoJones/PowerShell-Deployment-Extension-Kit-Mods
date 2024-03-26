@@ -2,7 +2,8 @@
 
 ## My modifications to the PowerShell Deployment Extension Kit v2.2.8 created by the [Friends of MDT](https://github.com/FriendsOfMDT).
 
-Feature/Changes are listed in the header of each script
+Feature/Changes are listed in the header of each script.
+
 These scripts are mean't to be used as a group. Mixing and matching is on you.
 
 View Raw to see the output without word wrapping.
