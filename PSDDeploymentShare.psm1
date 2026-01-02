@@ -233,7 +233,7 @@ function Get-PSDConnection {
 
     Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): PowerShell variable global:psddsDeployRoot is now =  $global:psddsDeployRoot"
     Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): PowerShell variable global:psddsDeployUser is now = $global:psddsDeployUser"
-    Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): PowerShell variable global:psddsDeployPassword is now = $global:psddsDeployPassword"
+    Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): PowerShell variable global:psddsDeployPassword is now = (redacted)"
 
     # Get credentials
     if (!$global:psddsDeployUser -or !$global:psddsDeployPassword) {
@@ -446,7 +446,8 @@ function Get-PSDContentWeb {
                         (New-Object System.Security.AccessControl.FileSystemAccessRule("Administrators", "FullControl", "Allow"))
                     )
                     if ($env:USERNAME) {
-                        $rules += New-Object System.Security.AccessControl.FileSystemAccessRule($env:USERNAME, "FullControl", "Allow")
+                        $currentUser = if ($env:USERDOMAIN) { "$($env:USERDOMAIN)\\$($env:USERNAME)" } else { $env:USERNAME }
+                        $rules += New-Object System.Security.AccessControl.FileSystemAccessRule($currentUser, "FullControl", "Allow")
                     }
                     foreach ($rule in $rules) {
                         $acl.SetAccessRule($rule)
