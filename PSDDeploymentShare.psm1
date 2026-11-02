@@ -168,7 +168,7 @@ function Get-PSDConnection {
 			# Check if the username is in the correct format.
 			if ($cred.UserName -match '^.+\\.+') {
 				# If format is correct, return the credential object.
-				Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): Format is correct ($($credential.UserName))"
+				Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): Format is correct ($($cred.UserName))"
 				$networkCred = $cred.GetNetworkCredential()
 				$userdomain = $networkCred.Domain
 				$username = $networkCred.UserName
@@ -191,7 +191,7 @@ function Get-PSDConnection {
 					[string] $deployRoot
 					Show-MessageBox -Text "Incorrect Username or Password" -Caption "Attempt $attempt - Incorrect Credentials"
 					#Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): Incorrect Username or Password"
-					Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): Incorrect Username ($userdomain/$username) or Password ($password)"
+					Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): Incorrect Username ($userdomain/$username) or Password (redacted)"
 				}
 				else
 				{
@@ -204,7 +204,7 @@ function Get-PSDConnection {
 				$attempt++
 				Show-MessageBox -Text "Username in incorrect format" -Caption "Attempt $attempt - Incorrect Format"
 				# Inform the user about the incorrect format and loop again.
-				Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): Username in incorrect format ($($credential.UserName))"
+				Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): Username in incorrect format ($($cred.UserName))"
 			}
 			
         }
@@ -233,7 +233,7 @@ function Get-PSDConnection {
 
     Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): PowerShell variable global:psddsDeployRoot is now =  $global:psddsDeployRoot"
     Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): PowerShell variable global:psddsDeployUser is now = $global:psddsDeployUser"
-    Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): PowerShell variable global:psddsDeployPassword is now = $global:psddsDeployPassword"
+    Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): PowerShell variable global:psddsDeployPassword is now = (redacted)"
 
     # Get credentials
     if (!$global:psddsDeployUser -or !$global:psddsDeployPassword) {
@@ -438,6 +438,26 @@ function Get-PSDContentWeb {
                 Add-Content -Value "Destination=$destination" -Path $iniPath
                 Add-Content -Value "MDT=true" -Path $iniPath
 
+                try {
+                    $acl = Get-Acl -Path $iniPath
+                    $acl.SetAccessRuleProtection($true, $false)
+                    $rules = @(
+                        (New-Object System.Security.AccessControl.FileSystemAccessRule("SYSTEM", "FullControl", "Allow")),
+                        (New-Object System.Security.AccessControl.FileSystemAccessRule("Administrators", "FullControl", "Allow"))
+                    )
+                    if ($env:USERNAME) {
+                        $currentUser = if ($env:USERDOMAIN) { "$($env:USERDOMAIN)\\$($env:USERNAME)" } else { $env:USERNAME }
+                        $rules += New-Object System.Security.AccessControl.FileSystemAccessRule($currentUser, "FullControl", "Allow")
+                    }
+                    foreach ($rule in $rules) {
+                        $acl.SetAccessRule($rule)
+                    }
+                    Set-Acl -Path $iniPath -AclObject $acl
+                }
+                catch {
+                    Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): Unable to set ACL on $iniPath" -Loglevel 2
+                }
+
                 Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): Destination=$destination"
                 Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): Source=$topUri"
 
@@ -445,29 +465,48 @@ function Get-PSDContentWeb {
                     Add-Content -Value "Username=$($tsenv:UserDomain)\$($tsenv:UserID)" -Path $iniPath
                     Add-Content -Value "Password=$($tsenv:UserPassword)" -Path $iniPath
                     Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): Username=$($tsenv:UserDomain)\$($tsenv:UserID)"
+                    Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): Credentials written to $iniPath for ACP and will be removed after download"
                 }
 
                 # ToDo, check that the ini file exists before we try...
                 Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): Downloading information saved to $iniPath so starting $tsenv:SMSTSDownloadProgram"
 
-                if ((Test-Path -Path $iniPath) -eq $true) {
-                    #Start-Process -Wait -FilePath "$tsenv:SMSTSDownloadProgram" -ArgumentList "$iniPath $PSDPkgId `"$($destination)`""
-                    $return = Start-Process -Wait -WindowStyle Hidden -FilePath "$tsenv:SMSTSDownloadProgram" -ArgumentList "$iniPath $PSDPkgId `"$($destination)`"" -PassThru
-                    if ($return.ExitCode -eq 0) {
-                        Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): $tsenv:SMSTSDownloadProgram Success"
-                        $Retry = $False
-                        Return
+                try {
+                    if ((Test-Path -Path $iniPath) -eq $true) {
+                        #Start-Process -Wait -FilePath "$tsenv:SMSTSDownloadProgram" -ArgumentList "$iniPath $PSDPkgId `"$($destination)`""
+                        $return = Start-Process -Wait -WindowStyle Hidden -FilePath "$tsenv:SMSTSDownloadProgram" -ArgumentList "$iniPath $PSDPkgId `"$($destination)`"" -PassThru
+                        if ($return.ExitCode -eq 0) {
+                            Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): $tsenv:SMSTSDownloadProgram Success"
+                            $Retry = $False
+                            Return
+                        }
+                        else {
+                            Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): $tsenv:SMSTSDownloadProgram Fail with exitcode $($return.ExitCode)" -Loglevel 2
+                        }
+                        # ToDo hash verification?
                     }
                     else {
-                        Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): $tsenv:SMSTSDownloadProgram Fail with exitcode $($return.ExitCode)" -Loglevel 2
+                        Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): Unable to access $iniPath, aborting..." -Loglevel 2
+                        Show-PSDInfo -Message "Unable to access $iniPath, aborting..." -Severity Information
+                        Start-Process PowerShell -Wait
+                        Exit 1
                     }
-                    # ToDo hash verification?
                 }
-                else {
-                    Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): Unable to access $iniPath, aborting..." -Loglevel 2
-                    Show-PSDInfo -Message "Unable to access $iniPath, aborting..." -Severity Information
-                    Start-Process PowerShell -Wait
-                    Exit 1
+                finally {
+                    if (Test-Path -Path $iniPath) {
+                        try {
+                            Set-Content -Path $iniPath -Value "" -Force -Encoding Ascii
+                        }
+                        catch {
+                        }
+                        try {
+                            Remove-Item -Path $iniPath -Force
+                            Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): Removed temporary ACP file $iniPath"
+                        }
+                        catch {
+                            Write-PSDLog -Message "$($MyInvocation.MyCommand.Name): Unable to remove temporary ACP file $iniPath" -Loglevel 2
+                        }
+                    }
                 }
             }
             else {
